@@ -101,8 +101,9 @@ packer.startup(function()
   use 'simnalamburt/vim-mundo'
   use 'jszakmeister/vim-togglecursor'
   use 'calebsmith/vim-lambdify'
-  use {'neoclide/coc.nvim', branch = 'release'}
-  use 'rafcamlet/coc-nvim-lua'
+  -- use {'neoclide/coc.nvim', branch = 'release'}
+  -- use 'rafcamlet/coc-nvim-lua'
+  use 'neovim/nvim-lspconfig'
   use 'tpope/vim-fugitive'
   use 'junegunn/vim-easy-align'
   use 'mhinz/vim-signify'
@@ -123,7 +124,7 @@ packer.startup(function()
   use 'andymass/vim-matchup'
   use 'sheerun/vim-polyglot'
   use 'junegunn/fzf.vim'
-  use 'vn-ki/coc-clap'
+  -- use 'vn-ki/coc-clap'
   use {'liuchengxu/vim-clap', run = ':Clap install-binary!'}
   use 'godlygeek/tabular'
   use 'plasticboy/vim-markdown'
@@ -351,23 +352,23 @@ vim.g.Lf_ShortcutB = "<leader>fb"
 --}}}
 
 --COC{{{
-vim.g.coc_global_extensions = {
-  'coc-json', 'coc-pyright',
-  'coc-floaterm','coc-tsserver',
-  'coc-angular','coc-sh',
-  'coc-vimtex','coc-vimlsp',
-  'coc-explorer', 'coc-java',
-  'coc-snippets', 'coc-pairs'
-}
-vim.g.coc_start_at_startup = 0
-vim.g.coc_config_home = '/Users/evan/.config/nvim/configurations'
-vim.g.coc_snippet_next = '<tab>'
-vim.api.nvim_exec([[
-  autocmd VimLeavePre * :call coc#rpc#kill()
-  autocmd FileType kotlin let b:coc_root_patterns=['.git', '.env']
-    ]],
-    false
-    )
+-- vim.g.coc_global_extensions = {
+--   'coc-json', 'coc-pyright',
+--   'coc-floaterm','coc-tsserver',
+--   'coc-angular','coc-sh',
+--   'coc-vimtex','coc-vimlsp',
+--   'coc-explorer', 'coc-java',
+--   'coc-snippets', 'coc-pairs'
+-- }
+-- vim.g.coc_start_at_startup = 0
+-- vim.g.coc_config_home = '/Users/evan/.config/nvim/configurations'
+-- vim.g.coc_snippet_next = '<tab>'
+-- vim.api.nvim_exec([[
+--   autocmd VimLeavePre * :call coc#rpc#kill()
+--   autocmd FileType kotlin let b:coc_root_patterns=['.git', '.env']
+--     ]],
+--     false
+--     )
 
 --}}}
 
@@ -592,6 +593,7 @@ require 'bufferline_config'
 --require 'whichkey_config'
 require 'telescope_config'
 require 'truezen_config'
+require 'treesitter_config'
 
 --}}}
 
@@ -770,3 +772,7 @@ require('indent_blankline').setup{
 
 --}}}
 
+--{{{
+require'lspconfig'.java_language_server.setup{}
+
+--}}}
