@@ -1,0 +1,23 @@
+-- vim.lsp.sumneko_lua.setup {
+--   -- You will have to adjust your values according to your system
+--   settings = {
+--     Lua = {
+--       runtime = {
+--         version = 'Lua 5.1',
+--         path = {
+--           '?.lua',
+--           '?/init.lua',
+--           vim.fn.expand'~/.luarocks/share/lua/5.1/?.lua',
+--           vim.fn.expand'~/.luarocks/share/lua/5.1/?/init.lua',
+--           -- '/usr/share/5.3/?.lua',
+--           -- '/usr/share/lua/5.3/?/init.lua'
+--         }
+--       },
+--       workspace = {
+--         library = {
+--           [vim.fn.expand'~/.luarocks/share/lua/5.1'] = true,
+--         }
+--       }
+--     }
+--   }
+-- }
