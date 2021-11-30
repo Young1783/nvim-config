@@ -98,6 +98,7 @@ packer.startup(function()
   use {'nvim-treesitter/nvim-treesitter', run = ':TSUpdate'}
   use 'nvim-treesitter/nvim-treesitter-refactor'
   use 'romgrk/nvim-treesitter-context'
+  use 'SmiteshP/nvim-gps'
   use {'kyazdani42/nvim-tree.lua', requires = 'kyazdani42/nvim-web-devicons'}
   use 'yegappan/mru'
   use 'simnalamburt/vim-mundo'
@@ -156,7 +157,7 @@ packer.startup(function()
     'glepnir/galaxyline.nvim',
     branch = 'main',
     -- your statusline
-    config = function() require'my_statusline' end,
+    -- config = function() require'my_statusline' end,
     -- config = function() require'spaceline' end,
     -- some optional icons
     requires = {'kyazdani42/nvim-web-devicons', opt = true}
@@ -872,6 +873,7 @@ require'nvim-treesitter.configs'.setup {
     enable = true,              -- false will disable the whole extension
     -- disable = {"org"},  -- list of language that will be disabled
   },
+  indent = {enable= true},
   refactor = {
     highlight_definitions = { enable = true },
     highlight_current_scope = { enable = true },
@@ -1077,30 +1079,376 @@ require'lspconfig'.java_language_server.setup{}
 
 --treesitter-context{{{
 require'treesitter-context'.setup{
-    enable = true, -- Enable this plugin (Can be enabled/disabled later via commands)
-    throttle = true, -- Throttles plugin updates (may improve performance)
-    max_lines = 0, -- How many lines the window should span. Values <= 0 mean no limit.
-    patterns = { -- Match patterns for TS nodes. These get wrapped to match at word boundaries.
-        -- For all filetypes
-        -- Note that setting an entry here replaces all other patterns for this entry.
-        -- By setting the 'default' entry below, you can control which nodes you want to
-        -- appear in the context window.
-        default = {
-            'class',
-            'function',
-            'method',
-            'for', -- These won't appear in the context
-            'while',
-            'if',
-            'switch',
-            'case',
-        },
-        -- Example for a specific filetype.
-        -- If a pattern is missing, *open a PR* so everyone can benefit.
-        --   rust = {
-        --       'impl_item',
-        --   },
-    },
+  enable = true, -- Enable this plugin (Can be enabled/disabled later via commands)
+  throttle = true, -- Throttles plugin updates (may improve performance)
+  max_lines = 0, -- How many lines the window should span. Values <= 0 mean no limit.
+  patterns = { -- Match patterns for TS nodes. These get wrapped to match at word boundaries.
+      -- For all filetypes
+      -- Note that setting an entry here replaces all other patterns for this entry.
+      -- By setting the 'default' entry below, you can control which nodes you want to
+      -- appear in the context window.
+      default = {
+          'class',
+          'function',
+          'method',
+          'for', -- These won't appear in the context
+          'while',
+          'if',
+          'switch',
+          'case',
+      },
+      -- Example for a specific filetype.
+      -- If a pattern is missing, *open a PR* so everyone can benefit.
+      --   rust = {
+      --       'impl_item',
+      --   },
+  },
 }
+
+--}}}
+
+--nvim-gps{{{
+require("nvim-gps").setup({
+  icons = {
+    ["class-name"] = ' ',      -- Classes and class-like objects
+    ["function-name"] = ' ',   -- Functions
+    ["method-name"] = ' ',     -- Methods (functions inside class-like objects)
+    ["container-name"] = '⛶ ',  -- Containers (example: lua tables)
+    ["tag-name"] = '炙'         -- Tags (example: html tags)
+  },
+
+  -- Add custom configuration per language or
+  -- Disable the plugin for a language
+  -- Any language not disabled here is enabled by default
+  languages = {
+    -- Some languages have custom icons
+    ["json"] = {
+      icons = {
+        ["array-name"] = ' ',
+        ["object-name"] = ' ',
+        ["null-name"] = '[] ',
+        ["boolean-name"] = 'ﰰﰴ ',
+        ["number-name"] = '# ',
+        ["string-name"] = ' '
+      }
+    },
+    ["toml"] = {
+      icons = {
+        ["table-name"] = ' ',
+        ["array-name"] = ' ',
+        ["boolean-name"] = 'ﰰﰴ ',
+        ["date-name"] = ' ',
+        ["date-time-name"] = ' ',
+        ["float-name"] = ' ',
+        ["inline-table-name"] = ' ',
+        ["integer-name"] = '# ',
+        ["string-name"] = ' ',
+        ["time-name"] = ' '
+      }
+    },
+    ["verilog"] = {
+      icons = {
+        ["module-name"] = ' '
+      }
+    },
+    ["yaml"] = {
+      icons = {
+        ["mapping-name"] = ' ',
+        ["sequence-name"] = ' ',
+        ["null-name"] = '[] ',
+        ["boolean-name"] = 'ﰰﰴ ',
+        ["integer-name"] = '# ',
+        ["float-name"] = ' ',
+        ["string-name"] = ' '
+      }
+    },
+
+    -- Disable for particular languages
+    -- ["bash"] = false, -- disables nvim-gps for bash
+    -- ["go"] = false,   -- disables nvim-gps for golang
+
+    -- Override default setting for particular languages
+    -- ["ruby"] = {
+    --  separator = '|', -- Overrides default separator with '|'
+    --  icons = {
+    --    -- Default icons not specified in the lang config
+    --    -- will fallback to the default value
+    --    -- "container-name" will fallback to default because it's not set
+    --    ["function-name"] = '',    -- to ensure empty values, set an empty string
+    --    ["tag-name"] = ''
+    --    ["class-name"] = '::',
+    --    ["method-name"] = '#',
+    --  }
+    --}
+  },
+
+  separator = ' > ',
+
+  -- limit for amount of context shown
+  -- 0 means no limit
+  -- Note: to make use of depth feature properly, make sure your separator isn't something that can appear
+  -- in context names (eg: function names, class names, etc)
+  depth = 0,
+
+  -- indicator used when context is hits depth limit
+  depth_limit_indicator = ".."
+})
+--}}}
+
+--galaxyline{{{
+
+local function printer(str)
+  return function() return str end
+end
+
+local gl = require("galaxyline")
+local gls = gl.section
+local left_round = printer("")
+local right_round = printer("")
+
+gl.short_line_list = {" "} -- keeping this table { } as empty will show inactive statuslines
+
+local colors = {
+  bg = "#1e222a",
+  -- bg = "NONE",
+  line_bg = "#1e222a",
+  fg = "#D8DEE9",
+  fg_green = "#65a380",
+  yellow = "#A3BE8C",
+  cyan = "#22262C",
+  darkblue = "#61afef",
+  green = "#BBE67E",
+  orange = "#FF8800",
+  purple = "#252930",
+  magenta = "#c678dd",
+  blue = "#22262C",
+  red = "#DF8890",
+  lightbg = "#282c34",
+  nord = "#81A1C1",
+  greenYel = "#EBCB8B"
+}
+
+gls.left[1] = {
+  leftRounded = {
+    provider = function()
+      return ""
+    end,
+    highlight = {colors.nord, colors.bg}
+  }
+}
+
+gls.left[2] = {
+  statusIcon = {
+    provider = function()
+      return "   "
+    end,
+    highlight = {colors.bg, colors.nord},
+    separator = " ",
+    separator_highlight = {colors.lightbg, colors.lightbg}
+  }
+}
+
+gls.left[3] = {
+  FileIcon = {
+    provider = "FileIcon",
+    condition = buffer_not_empty,
+    highlight = {require("galaxyline.provider_fileinfo").get_file_icon_color, colors.lightbg}
+  }
+}
+
+gls.left[4] = {
+  FileName = {
+    provider = {"FileName", "FileSize"},
+    condition = buffer_not_empty,
+    highlight = {colors.fg, colors.lightbg}
+  }
+}
+
+gls.left[5] = {
+  teech = {
+    provider = function()
+      return ""
+    end,
+    -- separator = " ",
+    highlight = {colors.lightbg, colors.bg}
+  }
+}
+
+local checkwidth = function()
+  local squeeze_width = vim.fn.winwidth(0) / 2
+  if squeeze_width > 40 then
+    return true
+  end
+  return false
+end
+
+gls.left[6] = {
+  DiffAdd = {
+    provider = "DiffAdd",
+    condition = checkwidth,
+    icon = "   ",
+    highlight = {colors.greenYel, colors.line_bg}
+  }
+}
+
+gls.left[7] = {
+  DiffModified = {
+    provider = "DiffModified",
+    condition = checkwidth,
+    icon = " ",
+    highlight = {colors.orange, colors.line_bg}
+  }
+}
+
+gls.left[8] = {
+  DiffRemove = {
+    provider = "DiffRemove",
+    condition = checkwidth,
+    icon = " ",
+    highlight = {colors.red, colors.line_bg}
+  }
+}
+
+gls.left[9] = {
+  LeftEnd = {
+    provider = function()
+      return " "
+    end,
+    separator = " ",
+    separator_highlight = {colors.line_bg, colors.line_bg},
+    highlight = {colors.line_bg, colors.line_bg}
+  }
+}
+
+gls.left[10] = {
+  DiagnosticError = {
+    provider = "DiagnosticError",
+    icon = "  ",
+    highlight = {colors.red, colors.bg}
+  }
+}
+
+gls.left[11] = {
+  Space = {
+    provider = function()
+      return " "
+    end,
+    highlight = {colors.line_bg, colors.line_bg}
+  }
+}
+
+gls.left[12] = {
+  DiagnosticWarn = {
+    provider = "DiagnosticWarn",
+    icon = "  ",
+    highlight = {colors.blue, colors.bg}
+  }
+}
+
+local gps = require("nvim-gps")
+gls.left[13] = {
+  nvimGPS = {
+    provider = function()
+      return gps.get_location()
+    end,
+    condition = function()
+      return gps.is_available()
+    end,
+    highlight = {colors.green, colors.line_bg}
+  }
+}
+
+gls.right[1] = {
+  GitIcon = {
+    provider = function()
+      return "   "
+    end,
+    condition = require("galaxyline.provider_vcs").check_git_workspace,
+    highlight = {colors.green, colors.line_bg}
+  }
+}
+
+gls.right[2] = {
+  GitBranch = {
+    provider = "GitBranch",
+    condition = require("galaxyline.provider_vcs").check_git_workspace,
+    highlight = {colors.green, colors.line_bg}
+  }
+}
+
+gls.right[3] = {
+  right_LeftRounded = {
+    provider = function()
+      return ""
+    end,
+    separator = " ",
+    separator_highlight = {colors.bg, colors.bg},
+    highlight = {colors.red, colors.bg}
+  }
+}
+
+gls.right[4] = {
+  ViMode = {
+    provider = function()
+      local alias = {
+        n = "NORMAL",
+        i = "INSERT",
+        c = "COMMAND",
+        V = "VISUAL",
+        [""] = "VISUAL",
+        v = "VISUAL",
+        R = "REPLACE"
+      }
+      return alias[vim.fn.mode()]
+    end,
+    highlight = {colors.bg, colors.red}
+  }
+}
+
+gls.right[5] = {
+  PerCent = {
+    provider = "LinePercent",
+    separator = " ",
+    separator_highlight = {colors.red, colors.red},
+    highlight = {colors.bg, colors.fg}
+  }
+}
+
+gls.right[6] = {
+  rightRounded = {
+    provider = function()
+      return ""
+    end,
+    highlight = {colors.fg, colors.bg}
+  }
+}
+gls.short_line_left =
+{
+  {left_round = {
+      provider = function()
+        return ""
+      end,
+      highlight = {colors.cyan, colors.cyan}
+  }},
+  {BufferName = {
+      provider = 'FileName',
+      highlight = {colors.orange, colors.cyan, 'bold'},
+      -- separator = _SEPARATORS.right,
+      -- separator_highlight = {_HEX_COLORS.purple, _HEX_COLORS.bar.middle}
+  }},
+  {right_round = {
+      provider = function()
+        return ""
+      end,
+      highlight = {colors.cyan, colors.cyan}
+  }}
+}
+-- section.short_line_right =
+-- {
+--     {Whitespace = {
+--         provider = 'whitespace',
+--         highlight = {colors.orange, colors.bg, 'bold'},
+--     }}
+-- }
 
 --}}}
