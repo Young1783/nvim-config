@@ -96,6 +96,7 @@ packer.startup(function()
   use 'neovim/nvim-lspconfig'
   use 'markstory/vim-zoomwin'
   use {'nvim-treesitter/nvim-treesitter', run = ':TSUpdate'}
+  use 'nvim-treesitter/nvim-treesitter-refactor'
   use {'kyazdani42/nvim-tree.lua', requires = 'kyazdani42/nvim-web-devicons'}
   use 'yegappan/mru'
   use 'simnalamburt/vim-mundo'
@@ -869,6 +870,26 @@ require'nvim-treesitter.configs'.setup {
     additional_vim_regex_highlighting = {"org"},
     enable = true,              -- false will disable the whole extension
     -- disable = {"org"},  -- list of language that will be disabled
+  },
+  refactor = {
+    highlight_definitions = { enable = true },
+    highlight_current_scope = { enable = true },
+    smart_rename = {
+      enable = true,
+      keymaps = {
+        smart_rename = "grr",
+      },
+    },
+    navigation = {
+      enable = true,
+      keymaps = {
+        goto_definition = "gnd",
+        list_definitions = "gnD",
+        list_definitions_toc = "gO",
+        goto_next_usage = "<a-*>",
+        goto_previous_usage = "<a-#>",
+      },
+    },
   },
 }
 --}}}
