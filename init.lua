@@ -101,9 +101,17 @@ packer.startup(function()
   use 'simnalamburt/vim-mundo'
   use 'jszakmeister/vim-togglecursor'
   use 'calebsmith/vim-lambdify'
+  use {'nvim-orgmode/orgmode',
+    config = function()
+      require('orgmode').setup({
+          -- org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+          org_default_notes_file = '~/.local/refile.org',
+        })
+    end
+  }
   -- use {'neoclide/coc.nvim', branch = 'release'}
   -- use 'rafcamlet/coc-nvim-lua'
-  use 'neovim/nvim-lspconfig'
+  -- use 'neovim/nvim-lspconfig'
   use 'tpope/vim-fugitive'
   use 'junegunn/vim-easy-align'
   use 'mhinz/vim-signify'
@@ -586,15 +594,283 @@ require'nvim-tree'.setup {
 
 --}}}
 
---Require{{{
--- require 'plugin_configs'
-require 'lua_lsp'
-require 'bufferline_config'
---require 'whichkey_config'
-require 'telescope_config'
-require 'truezen_config'
-require 'treesitter_config'
+--bufferline{{{
+local normal_bg = {
+  attribute = "bg",
+  highlight = "Normal",
+}
+local comment_fg = {
+  attribute = "fg",
+  highlight = "Comment",
+}
+require'bufferline'.setup{
+  options = {
+    view = "default",-- "multiwindow" | "default",
+    numbers = "ordinal",--  "none" | "ordinal" | "buffer_id" | "both",
+    --number_style = "", -- "superscript" | "" | { "none", "subscript" }, -- buffer_id at index 1, ordinal at index 2
+    -- mappings = true,-- true | false,
+    buffer_close_icon= '',
+    modified_icon = '●',
+    close_icon = '',
+    left_trunc_marker = '',
+    right_trunc_marker = '',
+    max_name_length = 18,
+    max_prefix_length = 15, -- prefix used when a buffer is deduplicated
+    tab_size = 18,
+    diagnostics = false,--  false | "nvim_lsp"
+    diagnostics_indicator = function(count, level, diagnostics_dict)
+      return "("..count..")"
+    end,
+    -- NOTE: this will be called a lot so don't do any heavy processing here
+    custom_filter = function(buf_number)
+      -- filter out filetypes you don't want to see
+      if vim.bo[buf_number].filetype ~= "<i-dont-want-to-see-this>" then
+        return true
+      end
+      -- filter out by buffer name
+      if vim.fn.bufname(buf_number) ~= "<buffer-name-I-dont-want>" then
+        return true
+      end
+      -- filter out based on arbitrary rules
+      -- e.g. filter out vim wiki buffer from tabline in your work repo
+      if vim.fn.getcwd() == "<work-repo>" and vim.bo[buf_number].filetype ~= "wiki" then
+        return true
+      end
+    end,
+    show_buffer_close_icons = false,-- true | false,
+    show_close_icon = false,-- true | false,
+    show_tab_indicators = true,-- true | false,
+    persist_buffer_sort = true, -- whether or not custom sorted buffers should persist
+    -- can also be a table containing 2 custom separators
+    -- [focused and unfocused]. eg: { '|', '|' }
+    separator_style = "thick",--  "slant" | "thick" | "thin" | { 'any', 'any' },
+    enforce_regular_tabs = true,-- false | true,
+    always_show_bufferline = true,-- true | false,
+    -- sort_by = 'extension' | 'relative_directory' | 'directory' | function(buffer_a, buffer_b)
+    --   -- add custom logic
+    --   return buffer_a.modified > buffer_b.modified
+    -- end
+  };
+  highlights = {
+    tab = {
+      guifg = {
+        attribute = 'fg',
+        highlight = 'Normal'
+      },
+      guibg = {
+        attribute = 'bg',
+        highlight = 'LineNr'
+      }
+    },
+    tab_selected = {
+      guifg = {
+        attribute = 'bg',
+        highlight = 'TebLineSel'
+      },
+      guibg = {
+        attribute = 'fg',
+        highlight = 'TabLineSel',
+      },
+    },
+    buffer_selected = {
+      guifg = {
+        attribute = 'fg',
+        highlight = 'SpecialChar',
+      },
+      guibg = {
+        attribute = 'bg',
+        highlight = 'Normal',
+      },
+      gui = "bold,italic",
+    },
+    separator_selected = {
+      guifg = normal_bg,
+      guibg = normal_bg,
+    },
+    -- separator_visible = {
+    --   guifg = separator_background_color,
+    --   guibg = visible_bg,
+    -- },
+    -- separator = {
+    --   guifg = comment_fg,
+    --   guibg = normal_bg,
+    -- },
+    fill = {
+      guibg = {
+        attribute = 'bg',
+        highlight = 'Normal'
+      },
+      guifg = {
+        attribute = 'bg',
+        highlight = 'Normal'
+      },
+    },
+  },
 
+}
+--}}}
+
+--telescope{{{
+local actions = require('telescope.actions')
+require('telescope').setup{
+  defaults = {
+    mappings = {
+      i = {
+        ["<c-j>"] = actions.move_selection_next,
+        ["<c-k>"] = actions.move_selection_previous,
+      },
+    },
+    vimgrep_arguments = {
+      'rg',
+      '--color=never',
+      '--no-heading',
+      '--with-filename',
+      '--line-number',
+      '--column',
+      '--smart-case'
+    },
+    prompt_prefix = "In: ",
+    selection_caret = " ",
+    entry_prefix = "  ",
+    initial_mode = "insert",
+    selection_strategy = "reset",
+    sorting_strategy = "ascending",
+    layout_strategy = "horizontal",
+    layout_config = {
+      width = 0.75,
+      prompt_position = "top",
+      preview_cutoff = 60,
+      horizontal = {
+        mirror = false,
+      },
+      vertical = {
+        mirror = false,
+      },
+    },
+    file_sorter =  require'telescope.sorters'.get_fuzzy_file,
+    file_ignore_patterns = {},
+    generic_sorter =  require'telescope.sorters'.get_generic_fuzzy_sorter,
+    path_display = {},
+    winblend = 0,
+    border = {},
+    borderchars = { '─', '│', '─', '│', '╭', '╮', '╯', '╰' },
+    color_devicons = true,
+    use_less = true,
+    set_env = { ['COLORTERM'] = 'truecolor' }, -- default = nil,
+    file_previewer = require'telescope.previewers'.vim_buffer_cat.new,
+    grep_previewer = require'telescope.previewers'.vim_buffer_vimgrep.new,
+    qflist_previewer = require'telescope.previewers'.vim_buffer_qflist.new,
+
+    -- Developer configurations: Not meant for general override
+    buffer_previewer_maker = require'telescope.previewers'.buffer_previewer_maker
+  }
+}
+require'telescope'.load_extension('project')
+require('telescope').load_extension('vim_bookmarks')
+
+--}}}
+
+--truezen{{{
+local true_zen = require("true-zen")
+
+-- setup for TrueZen.nvim
+true_zen.setup({
+    true_false_commands = false,
+    cursor_by_mode = false,
+    bottom = {
+      hidden_laststatus = 0,
+      hidden_ruler = false,
+      hidden_showmode = false,
+      hidden_showcmd = false,
+      hidden_cmdheight = 1,
+
+      shown_laststatus = 2,
+      shown_ruler = true,
+      shown_showmode = false,
+      shown_showcmd = false,
+      shown_cmdheight = 1
+    },
+    top = {
+      hidden_showtabline = 0,
+
+      shown_showtabline = 2
+    },
+    left = {
+      hidden_number = false,
+      hidden_relativenumber = false,
+      hidden_signcolumn = "no",
+
+      shown_number = true,
+      shown_relativenumber = false,
+      shown_signcolumn = "no"
+    },
+    ataraxis = {
+      ideal_writing_area_width = 0,
+      just_do_it_for_me = false,
+      left_padding = 40,
+      right_padding = 40,
+      top_padding = 0,
+      bottom_padding = 0,
+      custome_bg = "",
+      disable_bg_configuration = false,
+      disable_fillchars_configuration = false,
+      force_when_plus_one_window = false,
+      force_hide_statusline = true,
+      quit_untoggles_ataraxis = false
+    },
+    focus = {
+      margin_of_error = 5,
+      focus_method = "experimental"
+    },
+    minimalist = {
+      store_and_restore_settings = false,
+      show_vals_to_read = {}
+    },
+    events = {
+      before_minimalist_mode_shown = false,
+      before_minimalist_mode_hidden = false,
+      after_minimalist_mode_shown = false,
+      after_minimalist_mode_hidden = false
+    },
+    integrations = {
+      integration_galaxyline = false,
+      integration_vim_airline = false,
+      integration_vim_powerline = false,
+      integration_tmux = false,
+      integration_express_line = false,
+      integration_gitgutter = false,
+      integration_vim_signify = false,
+      integration_limelight = false,
+      integration_tzfocus_tzataraxis = false,
+      integration_gitsigns = false
+    }
+  })
+
+--}}}
+
+--treesitter{{{
+local parser_config = require "nvim-treesitter.parsers".get_parser_configs()
+parser_config.org = {
+  install_info = {
+    url = 'https://github.com/milisims/tree-sitter-org',
+    revision = 'main',
+    files = {'src/parser.c', 'src/scanner.cc'},
+  },
+  filetype = 'org',
+}
+-- require("nvim-treesitter.install").prefer_git = true
+require'nvim-treesitter.configs'.setup {
+  ensure_installed = {"java", "c", "bash", "cmake", "comment", "commonlisp", "cpp", "css",
+  "elm", "fish","go", "graphql", "html", "javascript", "jsdoc", "json", "json5", "julia",
+  "kotlin", "lua", "php", "python", "regex", "rst", "ruby", "rust", "scss", "toml", "tsx",
+  "typescript", "vim", "vue", "yaml", "org"}, -- one of "all", "maintained" (parsers with maintainers), or a list of languages
+  ignore_install = {}, -- List of parsers to ignore installing
+  highlight = {
+    additional_vim_regex_highlighting = {"org"},
+    enable = true,              -- false will disable the whole extension
+    -- disable = {"org"},  -- list of language that will be disabled
+  },
+}
 --}}}
 
 --markdown{{{
@@ -776,3 +1052,6 @@ require('indent_blankline').setup{
 require'lspconfig'.java_language_server.setup{}
 
 --}}}
+
+
+
