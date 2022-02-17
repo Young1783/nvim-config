@@ -90,8 +90,8 @@ end
 packer.startup(function()
   use 'wbthomason/packer.nvim' -- Package manager
   use {'ripxorip/aerojump.nvim', run = ':UpdateRemotePlugins'}
-  use 'glepnir/dashboard-nvim'
-  use {'marko-cerovac/material.nvim', branch = 'no-async'}
+  -- use 'glepnir/dashboard-nvim'
+  use {'ray-x/starry.nvim'}
   use {'rrethy/vim-hexokinase', run = 'make hexokinase'}
   use 'neovim/nvim-lspconfig'
   use 'markstory/vim-zoomwin'
@@ -112,6 +112,8 @@ packer.startup(function()
         })
     end
   }
+  use {"startup-nvim/startup.nvim",
+    requires = {"nvim-telescope/telescope.nvim", "nvim-lua/plenary.nvim"}}
   -- use {'neoclide/coc.nvim', branch = 'release'}
   -- use 'rafcamlet/coc-nvim-lua'
   -- use 'neovim/nvim-lspconfig'
@@ -126,6 +128,15 @@ packer.startup(function()
   use 'voldikss/vim-floaterm'
   use 'romainl/vim-cool'
   use 'luochen1990/rainbow'
+  use {'ms-jpq/coq_nvim',
+    branch = 'coq'
+  }
+  use {'ms-jpq/coq.artifacts',
+    branch = 'artifacts'
+  }
+  use {'ms-jpq/coq.thirdparty',
+    branch = '3p'
+  }
   use 'honza/vim-snippets'
   --use 'SirVer/ultisnips'
   use 'tyru/caw.vim'
@@ -143,6 +154,7 @@ packer.startup(function()
   use 'liuchengxu/vista.vim'
   use 'neomake/neomake'
   use "kdav5758/TrueZen.nvim"
+  use { 'TimUntersberger/neogit', requires = 'nvim-lua/plenary.nvim' }
   use 'yamatsum/nvim-cursorline'
   use {'akinsho/nvim-bufferline.lua', requires = 'kyazdani42/nvim-web-devicons'}
   use {
@@ -179,7 +191,7 @@ vim.o.hidden = true
 --   vim.o.undofile = true
 -- end
 
-vim.o.relativenumber = true
+-- vim.o.relativenumber = true
 vim.o.number = true
 vim.o.cmdheight = 2
 vim.o.wildmenu = true
@@ -206,7 +218,7 @@ vim.o.hlsearch = true
 vim.o.incsearch = true
 vim.o.backup = false
 vim.o.swapfile = false
-vim.o.autochdir = false
+vim.o.autochdir = true
 vim.o.history = 1000
 vim.o.updatetime = 100
 vim.o.timeoutlen = 500
@@ -217,21 +229,26 @@ vim.o.confirm = true
 vim.o.shortmess='c'
 vim.o.listchars = 'tab:→ ,eol:↲,trail:·,extends:⟩,precedes:⟨'
 vim.o.showbreak = '↪ '
+-- vim.o.cindent = true
 vim.o.rtp = vim.o.rtp .. "/opt/homebrew/opt/fzf"
 
-vim.g.material_style = 'deep ocean'
-vim.g.material_italic_comments = true
-vim.g.material_italic_keywords = true
-vim.g.material_italic_functions = true
-vim.g.material_italic_variables = false
-vim.g.material_contrast = true
-vim.g.material_borders = false
-vim.g.material_disable_background = false
-
---vim.cmd [[colorscheme material]]
-require('material').set()
-
-
+vim.g.starry_italic_comments = true
+vim.g.starry_italic_string = true
+vim.g.starry_italic_keywords = false
+vim.g.starry_italic_functions = false
+vim.g.starry_italic_variables = true
+vim.g.starry_contrast = false
+vim.g.starry_borders = true
+vim.g.starry_disable_background = false
+vim.g.starry_style_fix=true  --disable random loading
+vim.g.starry_style="dracula"  --load moonlight everytime or
+vim.g.starry_darker_contrast=true
+vim.g.starry_deep_black=true       --OLED deep black
+vim.g.starry_set_hl=false -- Note: enable for nvim 0.6+, it is faster (loading time down to 4~6s from 7~11s), but it does
+vim.g.starry_daylight_switch=false
+-- require('starry.functions').change_style("dracula_blood")
+vim.cmd [[colorscheme starry]]
+vim.cmd [[highlight LineNr gui=bold]]
 --}}}
 
 --nvim prog path{{{
@@ -248,6 +265,7 @@ vim.g.ruby_host_prog ="/opt/homebrew/lib/ruby/gems/3.0.0/bin/neovim-ruby-host"
 vim.g.dashboard_default_executive ='telescope'
 vim.g.dashboard_session_directory = '~/.cache/nvim/session'
 vim.g.dashboard_custom_footer = {'Design By Evan'}
+vim.g.dashboard_custom_header = ''
 vim.g.dashboard_custom_header = {
       '████████████████████████████████████████████████████████████████████████████',
       '█▄─▄▄─█▄─▄▄▀█▄─▄█▄─▄▄▀█▄─▄▄─███▄─▄▄▀██▀▄─██▄─▄█▄─▀█▄─▄█▄─▄─▀█─▄▄─█▄─█▀▀▀█─▄█',
@@ -277,6 +295,17 @@ vim.api.nvim_exec(
   ]],
   false
   )
+
+--}}}
+
+--startup{{{
+require('startup').setup({
+  options = {
+    empty_lines_between_mappings = false,
+    disable_statuslines = true,
+  },
+  theme = 'dashboard'
+})
 
 --}}}
 
@@ -851,52 +880,6 @@ true_zen.setup({
 
 --}}}
 
---treesitter{{{
-local parser_config = require "nvim-treesitter.parsers".get_parser_configs()
-parser_config.org = {
-  install_info = {
-    url = 'https://github.com/milisims/tree-sitter-org',
-    revision = 'main',
-    files = {'src/parser.c', 'src/scanner.cc'},
-  },
-  filetype = 'org',
-}
--- require("nvim-treesitter.install").prefer_git = true
-require'nvim-treesitter.configs'.setup {
-  ensure_installed = {"java", "c", "bash", "cmake", "comment", "commonlisp", "cpp", "css",
-  "elm", "fish","go", "graphql", "html", "javascript", "jsdoc", "json", "json5", "julia",
-  "kotlin", "lua", "php", "python", "regex", "rst", "ruby", "rust", "scss", "toml", "tsx",
-  "typescript", "vim", "vue", "yaml", "org"}, -- one of "all", "maintained" (parsers with maintainers), or a list of languages
-  ignore_install = {}, -- List of parsers to ignore installing
-  highlight = {
-    additional_vim_regex_highlighting = {"org"},
-    enable = true,              -- false will disable the whole extension
-    -- disable = {"org"},  -- list of language that will be disabled
-  },
-  indent = {enable= true},
-  refactor = {
-    highlight_definitions = { enable = true },
-    highlight_current_scope = { enable = true },
-    smart_rename = {
-      enable = true,
-      keymaps = {
-        smart_rename = "grr",
-      },
-    },
-    navigation = {
-      enable = true,
-      keymaps = {
-        goto_definition = "gnd",
-        list_definitions = "gnD",
-        list_definitions_toc = "gO",
-        goto_next_usage = "<a-*>",
-        goto_previous_usage = "<a-#>",
-      },
-    },
-  },
-}
---}}}
-
 --markdown{{{
 vim.g.vim_markdown_conceal = 0
 vim.g.vim_markdown_conceal_code_blocks = 0
@@ -1041,7 +1024,7 @@ wk.register({
 
 vim.api.nvim_set_keymap('c', '<C-A>', '<Home>', {})
 vim.api.nvim_set_keymap('c', '<C-E>', '<End>', {})
-vim.api.nvim_set_keymap('n', '<F10>', ':Dashboard<CR>', {noremap = true, silent = true})
+vim.api.nvim_set_keymap('n', '<F10>', ':Startup display<CR>', {noremap = true, silent = true})
 vim.api.nvim_set_keymap('n', '<F8>', ':TagbarToggle<CR>', {noremap = true, silent = true})
 vim.api.nvim_set_keymap('n', '-', '<Plug>(choosewin)', {})
 --Remap for dealing with word wrap
@@ -1105,6 +1088,55 @@ require'treesitter-context'.setup{
   },
 }
 
+--}}}
+
+--treesitter{{{
+local parser_config = require "nvim-treesitter.parsers".get_parser_configs()
+parser_config.org = {
+  install_info = {
+    url = 'https://github.com/milisims/tree-sitter-org',
+    revision = 'main',
+    files = {'src/parser.c', 'src/scanner.cc'},
+  },
+  filetype = 'org',
+}
+require("nvim-treesitter.install").prefer_git = true
+require'nvim-treesitter.configs'.setup {
+  -- ensure_installed = {"java", "c", "bash", "cmake", "comment", "commonlisp", "cpp", "css",
+  -- "elm", "fish","go", "graphql", "html", "javascript", "jsdoc", "json", "json5", "julia",
+  -- "kotlin", "lua", "php", "python", "regex", "rst", "ruby", "rust", "scss", "toml", "tsx",
+  -- "typescript", "vim", "vue", "yaml", "org"}, -- one of "all", "maintained" (parsers with maintainers), or a list of languages
+
+  ensure_installed = {"java", "c", "bash", "cmake", "comment", "commonlisp", "cpp", "css", "lua",
+  "fish","html", "javascript", "json", "json5", "regex", "ruby", "scss", "tsx", "typescript", "vim", "vue", "yaml"},
+  ignore_install = {}, -- List of parsers to ignore installing
+  highlight = {
+    additional_vim_regex_highlighting = {"org"},
+    enable = true,              -- false will disable the whole extension
+    -- disable = {"org"},  -- list of language that will be disabled
+  },
+  indent = {enable= true},
+  refactor = {
+    highlight_definitions = { enable = true },
+    highlight_current_scope = { enable = true },
+    smart_rename = {
+      enable = true,
+      keymaps = {
+        smart_rename = "grr",
+      },
+    },
+    navigation = {
+      enable = true,
+      keymaps = {
+        goto_definition = "gnd",
+        list_definitions = "gnD",
+        list_definitions_toc = "gO",
+        goto_next_usage = "<a-*>",
+        goto_previous_usage = "<a-#>",
+      },
+    },
+  },
+}
 --}}}
 
 --nvim-gps{{{
@@ -1452,3 +1484,5 @@ gls.short_line_left =
 -- }
 
 --}}}
+
+
