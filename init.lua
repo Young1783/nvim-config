@@ -145,6 +145,7 @@ packer.startup(function()
   use 'lukas-reineke/indent-blankline.nvim'
   use 'andymass/vim-matchup'
   use 'sheerun/vim-polyglot'
+  use {'junegunn/fzf', run = ':call fzf#install()'}
   use 'junegunn/fzf.vim'
   -- use 'vn-ki/coc-clap'
   use {'liuchengxu/vim-clap', run = ':Clap install-binary!'}
@@ -162,6 +163,7 @@ packer.startup(function()
     requires = {{'nvim-lua/popup.nvim'}, {'nvim-lua/plenary.nvim'}},
   }
   use 'nvim-telescope/telescope-project.nvim'
+  use 'mfussenegger/nvim-jdtls'
   use {'tom-anders/telescope-vim-bookmarks.nvim',
     requires = {{'MattesGroeger/vim-bookmarks'}}
   }
@@ -232,6 +234,7 @@ vim.o.showbreak = '↪ '
 -- vim.o.cindent = true
 vim.o.rtp = vim.o.rtp .. "/opt/homebrew/opt/fzf"
 
+vim.g.AutoPairsMapCR=0
 vim.g.starry_italic_comments = true
 vim.g.starry_italic_string = true
 vim.g.starry_italic_keywords = false
@@ -759,7 +762,8 @@ require('telescope').setup{
       '--with-filename',
       '--line-number',
       '--column',
-      '--smart-case'
+      '--smart-case',
+      '--hidden'
     },
     prompt_prefix = "In: ",
     selection_caret = " ",
@@ -780,7 +784,7 @@ require('telescope').setup{
       },
     },
     file_sorter =  require'telescope.sorters'.get_fuzzy_file,
-    file_ignore_patterns = {},
+    file_ignore_patterns = {'*node_modules/'},
     generic_sorter =  require'telescope.sorters'.get_generic_fuzzy_sorter,
     path_display = {},
     winblend = 0,
@@ -998,7 +1002,7 @@ wk.register({
       t = {
         name = 'Telescope',
         [' '] = {[[<cmd>lua require('telescope.builtin').buffers()<CR>]], 'Buffers'},
-        f = {[[<cmd>lua require('telescope.builtin').find_files({previewer = false})<CR>]], 'find files'},
+        f = {[[<cmd>lua require('telescope.builtin').find_files({hidden=true,find_command={'fd','--type','f','--exclude','node_modules'},previewer = false})<CR>]], 'find files'},
         b = {[[<cmd>lua require('telescope.builtin').current_buffer_fuzzy_find()<CR>]], 'search'},
         h = {[[<cmd>lua require('telescope.builtin').help_tags()<CR>]], 'help tags'},
         t = {[[<cmd>lua require('telescope.builtin').tags()<CR>]], 'tags'},
@@ -1055,9 +1059,12 @@ require('indent_blankline').setup{
 
 --}}}
 
---lsp{{{
-require'lspconfig'.java_language_server.setup{}
-
+--lspconfig{{{
+-- require'lspconfig'.java_language_server.setup{}
+require'lspconfig'.tailwindcss.setup{}
+require'lspconfig'.vuels.setup{}
+require'lspconfig'.quick_lint_js.setup {}
+require'lspconfig'.bashls.setup{}
 --}}}
 
 --treesitter-context{{{
@@ -1101,6 +1108,7 @@ parser_config.org = {
   filetype = 'org',
 }
 require("nvim-treesitter.install").prefer_git = true
+require('orgmode').setup_ts_grammar()
 require'nvim-treesitter.configs'.setup {
   -- ensure_installed = {"java", "c", "bash", "cmake", "comment", "commonlisp", "cpp", "css",
   -- "elm", "fish","go", "graphql", "html", "javascript", "jsdoc", "json", "json5", "julia",
@@ -1485,4 +1493,21 @@ gls.short_line_left =
 
 --}}}
 
+--coq{{{
+vim.g.coq_settings = {
+  keymap = {
+    recommended = true,
+    pre_select = true,
+    bigger_preview = "<c-k>",
+    jump_to_mark = "<c-h>",
 
+  },
+  auto_start = 'shut-up',
+  clients = {
+    tmux = { enabled = false },
+  },
+}
+
+require'coq'
+
+--}}}
